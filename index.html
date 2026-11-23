@@ -2,83 +2,146 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Grande Galerie 3D</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Louvre de Raul</title>
+<link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-/*
-VOICE: calm, museum-quiet, the architecture speaks; UI stays out of the way.
-IDEA: a museum floor plan card you carry while you walk the gallery.
-PICTURE: the full-screen WebGL Grande Galerie itself, barrel vault and skylights.
-COLOUR and TYPE: smoked glass panels, white ink, one deep Louvre red accent; Cormorant title, Inter UI.
-LAYOUT: scene edge to edge, compact card top-left, joystick zone bottom-left on touch.
-*/
 :root{color-scheme:dark;--glass:rgba(16,16,18,.62);--ink:#f5f3ef;--mute:#c9c4bb;--red:#a3263a;--line:rgba(255,255,255,.18)}
 *{box-sizing:border-box;min-width:0}
-html,body{margin:0;height:100%;overflow:hidden;background:#d9d2c4;color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif;touch-action:none;-webkit-user-select:none;user-select:none}
+html,body{margin:0;height:100%;overflow:hidden;background:#cdd8e2;color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif;touch-action:none;-webkit-user-select:none;user-select:none}
 canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block;outline:none}
-.card{position:fixed;top:max(12px,env(safe-area-inset-top));left:12px;width:min(300px,calc(100vw - 24px));background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:14px;padding:12px 14px;z-index:5}
-h1{font:600 26px/1.05 Cormorant,Georgia,serif;margin:0;letter-spacing:.2px}
-.sub{color:var(--mute);font-size:13px;margin:2px 0 10px}
-.plan{position:relative;height:28px;border-radius:7px;background:rgba(255,255,255,.08);border:1px solid var(--line);cursor:pointer;overflow:hidden}
+.card{position:fixed;top:max(12px,env(safe-area-inset-top));left:max(12px,env(safe-area-inset-left));width:min(300px,calc(100vw - 24px));background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:14px;padding:12px 14px;z-index:5}
+h1{font:600 26px/1.05 Cormorant,Georgia,serif;margin:0 40px 0 0}
+.sub{color:var(--mute);font-size:13px;margin:2px 0 8px}
+.plan{position:relative;height:28px;border-radius:7px;background:rgba(255,255,255,.08);border:1px solid var(--line);cursor:pointer;overflow:hidden;margin-top:4px}
 .plan i{position:absolute;top:0;bottom:0;width:1px;background:var(--line)}
-.plan b{position:absolute;top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 3px rgba(163,38,58,.8);transition:left .08s linear}
-.row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center}
+.plan b{position:absolute;top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 3px rgba(163,38,58,.8)}
+body:not([data-world=gallery]) .gal-only{display:none}
 .where{font-size:13px;color:var(--mute);margin-top:6px}
+.row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
 button{font:500 14px Inter,system-ui,sans-serif;min-height:40px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.1);color:var(--ink);cursor:pointer}
 button.pri{background:var(--red);border-color:transparent}
-button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+button:focus-visible,[data-place]:focus-visible{outline:2px solid #fff;outline-offset:2px}
 .hide-card{position:absolute;top:8px;right:8px;min-height:32px;padding:0 10px;font-size:13px}
-.intro{position:fixed;inset:0;display:grid;place-items:center;z-index:10;background:rgba(10,10,12,.45);padding:16px}
-.intro .box{max-width:420px;background:rgba(16,16,18,.82);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:20px 22px}
-.intro h2{font:600 32px/1.05 Cormorant,Georgia,serif;margin:0 0 8px}
-.intro p{margin:0 0 10px;color:var(--mute)}
-.intro ul{margin:0 0 14px;padding-left:18px}
-.intro li{margin:3px 0}
+.mini{display:none}
+.card.min>*:not(.mini){display:none}.card.min{width:auto;padding:6px}.card.min .mini{display:block}
+.overlay{position:fixed;inset:0;display:grid;place-items:center;z-index:10;background:rgba(10,10,12,.5);padding:16px}
+.overlay[hidden]{display:none}
+.box{max-width:440px;width:100%;max-height:calc(100dvh - 32px);overflow:auto;background:rgba(16,16,18,.86);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:16px;padding:20px 22px;touch-action:pan-y}
+.box h2{font:600 32px/1.05 Cormorant,Georgia,serif;margin:0 0 8px}
+.box p{margin:0 0 10px;color:var(--mute)}
+.box ul{margin:0 0 14px;padding-left:18px}.box li{margin:3px 0}
 .note{font-size:13px;color:var(--mute)}
+.maphead{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.maphead h2{margin:0}
+svg.plan2{width:100%;height:auto;display:block;margin:10px 0 6px}
+svg .wing{fill:#3a3631;stroke:#8d857a;stroke-width:1}
+svg .lbl{fill:#cfc8bc;font:500 10px Inter,sans-serif}
+svg .pin circle{fill:var(--red);stroke:#fff;stroke-width:1.5}
+svg .pin text{fill:#fff;font:600 10px Inter,sans-serif;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+svg .pin{cursor:pointer}svg .pin.here circle{fill:#fff}svg .pin.here text{fill:var(--red)}
+.places{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:8px}
+.places button{text-align:left;display:flex;gap:8px;align-items:center;min-height:44px;font-size:13.5px;padding:6px 10px}
+.places button span{flex:none;width:20px;height:20px;border-radius:50%;background:var(--red);display:grid;place-items:center;font-size:11px;font-weight:600}
+.places button.here{border-color:#fff}
+.group{font-size:12.5px;color:var(--mute);margin:10px 0 0;grid-column:1/-1}
 .joy{position:fixed;width:110px;height:110px;margin:-55px 0 0 -55px;border-radius:50%;border:2px solid rgba(255,255,255,.5);background:rgba(0,0,0,.18);pointer-events:none;display:none;z-index:4}
 .joy span{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(255,255,255,.75)}
 .cross{position:fixed;left:50%;top:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 0 0 1px rgba(0,0,0,.35);display:none;z-index:3;pointer-events:none}
+.hot{position:fixed;left:50%;bottom:calc(max(18px,env(safe-area-inset-bottom)) + 52px);transform:translateX(-50%);z-index:6;min-height:48px;padding:0 20px;font-size:15px;background:var(--red);border-color:transparent;box-shadow:0 6px 20px rgba(0,0,0,.35)}
+.hot[hidden]{display:none}
 .toast{position:fixed;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--glass);border:1px solid var(--line);border-radius:10px;padding:8px 14px;font-size:14px;z-index:6;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
 .toast.on{opacity:1}
-.load{position:fixed;inset:0;display:grid;place-items:center;z-index:20;background:#d9d2c4;color:#3b3631;font:500 15px Inter,sans-serif;text-align:center;padding:20px}
-.mini{display:none}
-.card.min>*:not(.mini){display:none}.card.min{width:auto;padding:6px}.card.min .mini{display:block}
-@media(prefers-reduced-motion:reduce){.plan b,.toast{transition:none}}
+.load{position:fixed;inset:0;display:grid;place-items:center;z-index:20;background:#cdd8e2;color:#2e3740;font:500 15px Inter,sans-serif;text-align:center;padding:20px}
+@media(prefers-reduced-motion:reduce){.toast{transition:none}}
 </style>
 </head>
 <body>
 <canvas id="c" tabindex="0"></canvas>
-<div class="load" id="load">Montando a galeria…</div>
+<div class="load" id="load">Montando o Louvre…</div>
 
 <div class="card" id="card">
   <button class="hide-card" id="minBtn" aria-label="Recolher painel">–</button>
-  <h1>Grande Galerie</h1>
+  <h1 id="title">Cour Napoléon</h1>
   <div class="sub">Louvre, estudo de arquitetura em Three.js</div>
-  <div class="plan" id="plan" aria-label="Planta da galeria: toque para ir até um ponto"></div>
-  <div class="where" id="where">Vão 1 de 10</div>
+  <div class="plan gal-only" id="plan" aria-label="Planta da galeria: toque para ir até um ponto"></div>
+  <div class="where" id="where"></div>
   <div class="row">
-    <button class="pri" id="addBtn">Adicionar desenhos</button>
+    <button class="pri" id="mapBtn">Mapa</button>
+    <button class="gal-only" id="addBtn">Desenhos</button>
     <button id="helpBtn">Ajuda</button>
   </div>
   <button class="mini" id="maxBtn">Painel</button>
 </div>
 
-<div class="intro" id="intro">
+<div class="overlay" id="intro">
   <div class="box">
-    <h2>Grande Galerie</h2>
-    <p>Uma versão simplificada da galeria mais longa do Louvre: abóbada de berço, claraboias no topo e arcos sobre colunas duplas. As proporções são aproximadas.</p>
+    <h2>Louvre de Raul</h2>
+    <p>Um estudo da arquitetura do Louvre: o pátio da pirâmide (Cour Napoléon) e a Grande Galerie. Tudo é modelado em código e simplificado. A pirâmide segue as medidas reais aproximadas, o resto está em escala estimada.</p>
     <ul>
       <li><b>Celular:</b> polegar esquerdo anda, arrastar no resto da tela olha em volta.</li>
-      <li><b>Computador:</b> clique para olhar com o mouse, WASD ou setas andam, Shift corre, Esc solta o mouse.</li>
-      <li><b>Quadros:</b> toque ou clique em um quadro para colocar um desenho, ou use “Adicionar desenhos” para vários de uma vez.</li>
+      <li><b>Computador:</b> clique para olhar com o mouse, WASD ou setas andam, Shift corre, M abre o mapa, Esc solta o mouse.</li>
+      <li><b>Mapa:</b> pula direto para cada ambiente.</li>
+      <li><b>Pirâmide:</b> chegue perto dela para entrar na Grande Galerie.</li>
+      <li><b>Quadros:</b> na galeria, toque num quadro para colocar um desenho.</li>
     </ul>
-    <button class="pri" id="goBtn">Entrar na galeria</button>
+    <button class="pri" id="goBtn">Começar</button>
     <p class="note" style="margin-top:12px">As imagens ficam só no seu aparelho, nada é enviado.</p>
   </div>
 </div>
 
+<div class="overlay" id="map" hidden role="dialog" aria-label="Mapa do Louvre">
+  <div class="box">
+    <div class="maphead"><h2>Mapa</h2><button id="mapClose">Fechar</button></div>
+    <svg class="plan2" viewBox="0 0 360 352" aria-hidden="true">
+      <rect class="wing" x="44" y="26" width="276" height="35"/>
+      <rect class="wing" x="44" y="235" width="276" height="35"/>
+      <rect class="wing" x="285" y="26" width="35" height="244"/>
+      <rect class="wing" x="148" y="26" width="45" height="41"/>
+      <rect class="wing" x="148" y="229" width="45" height="41"/>
+      <rect class="wing" x="275" y="127" width="48" height="42"/>
+      <text class="lbl" x="60" y="47">Ala Richelieu</text>
+      <text class="lbl" x="60" y="256">Ala Denon</text>
+      <text class="lbl" transform="translate(306 205) rotate(-90)">Ala Sully</text>
+      <text class="lbl" x="56" y="208">Cour Napoléon</text>
+      <rect x="187" y="123" width="50" height="50" fill="none" stroke="#9fb3bf" stroke-width="1.5"/>
+      <path d="M187 123L237 173M237 123L187 173" stroke="#9fb3bf" stroke-width="1"/>
+      <rect x="207" y="99" width="10" height="10" fill="none" stroke="#9fb3bf"/>
+      <rect x="207" y="186" width="10" height="10" fill="none" stroke="#9fb3bf"/>
+      <rect x="250" y="143" width="10" height="10" fill="none" stroke="#9fb3bf"/>
+      <path d="M212 173V300" stroke="#8d857a" stroke-dasharray="3 4"/>
+      <rect class="wing" x="44" y="300" width="276" height="18" rx="3"/>
+      <text class="lbl" x="44" y="338">Grande Galerie (esquemático; fica na ala Denon)</text>
+      <g class="pin" data-place="arrival" tabindex="-1"><circle cx="72" cy="148" r="9"/><text x="72" y="148">1</text></g>
+      <g class="pin" data-place="pyramid" tabindex="-1"><circle cx="167" cy="158" r="9"/><text x="167" y="158">2</text></g>
+      <g class="pin" data-place="horloge" tabindex="-1"><circle cx="262" cy="125" r="9"/><text x="262" y="125">3</text></g>
+      <g class="pin" data-place="richelieu" tabindex="-1"><circle cx="135" cy="113" r="9"/><text x="135" y="113">4</text></g>
+      <g class="pin" data-place="denon" tabindex="-1"><circle cx="135" cy="183" r="9"/><text x="135" y="183">5</text></g>
+      <g class="pin" data-place="pools" tabindex="-1"><circle cx="232" cy="218" r="9"/><text x="232" y="218">6</text></g>
+      <g class="pin" data-place="gallery-start" tabindex="-1"><circle cx="308" cy="309" r="9"/><text x="308" y="309">7</text></g>
+      <g class="pin" data-place="gallery-mid" tabindex="-1"><circle cx="182" cy="309" r="9"/><text x="182" y="309">8</text></g>
+      <g class="pin" data-place="gallery-end" tabindex="-1"><circle cx="56" cy="309" r="9"/><text x="56" y="309">9</text></g>
+    </svg>
+    <div class="places">
+      <div class="group">Cour Napoléon</div>
+      <button data-place="arrival"><span>1</span>Chegada</button>
+      <button data-place="pyramid"><span>2</span>Pirâmide</button>
+      <button data-place="horloge"><span>3</span>Pav. de l'Horloge</button>
+      <button data-place="richelieu"><span>4</span>Ala Richelieu</button>
+      <button data-place="denon"><span>5</span>Ala Denon</button>
+      <button data-place="pools"><span>6</span>Espelhos d'água</button>
+      <div class="group">Grande Galerie</div>
+      <button data-place="gallery-start"><span>7</span>Início</button>
+      <button data-place="gallery-mid"><span>8</span>Meio</button>
+      <button data-place="gallery-end"><span>9</span>Fim</button>
+    </div>
+    <p class="note" style="margin-top:10px">Planta esquemática, fora de escala exata.</p>
+  </div>
+</div>
+
+<button class="hot" id="hotBtn" hidden></button>
 <div class="joy" id="joy"><span id="knob"></span></div>
 <div class="cross" id="cross"></div>
 <div class="toast" id="toast"></div>
@@ -89,363 +152,8 @@ button:focus-visible{outline:2px solid #fff;outline-offset:2px}
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}
 </script>
 <script>
-setTimeout(()=>{const l=document.getElementById('load');if(l&&!window.__ok)l.textContent='Não foi possível carregar o Three.js. Verifique a conexão e recarregue a página.'},12000);
+setTimeout(()=>{const l=document.getElementById('load');if(l&&!window.__ok)l.textContent='Não foi possível carregar a cena. Verifique a conexão e recarregue a página.'},15000);
 </script>
-<script type="module">
-import * as THREE from 'three';
-import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-
-// ---------- dimensões (metros, aproximadas) ----------
-const BAYS = 10, BAY = 12, L = BAYS * BAY, W = 12, HW = W / 2, S = 8.2, EYE = 1.65;
-
-const $ = id => document.getElementById(id);
-const canvas = $('c');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
-renderer.setSize(innerWidth, innerHeight, false);
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.05;
-renderer.outputColorSpace = THREE.SRGBColorSpace;
-const maxAniso = renderer.capabilities.getMaxAnisotropy();
-
-const scene = new THREE.Scene();
-const FOG = 0xd8d0c2;
-scene.background = new THREE.Color(FOG);
-scene.fog = new THREE.Fog(FOG, 28, 115);
-const pmrem = new THREE.PMREMGenerator(renderer);
-scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-scene.environmentIntensity = 0.55;
-
-const camera = new THREE.PerspectiveCamera(68, innerWidth / innerHeight, 0.05, 260);
-camera.rotation.order = 'YXZ';
-camera.position.set(0, EYE, -3);
-
-scene.add(new THREE.HemisphereLight(0xfff6e8, 0x7a6450, 1.25));
-const sun = new THREE.DirectionalLight(0xfff1dc, 1.6);
-sun.position.set(3, 30, -40); sun.target.position.set(0, 0, -60);
-scene.add(sun, sun.target);
-
-// ---------- texturas procedurais ----------
-function canvasTex(w, h, draw, repeat) {
-  const c = document.createElement('canvas'); c.width = w; c.height = h;
-  draw(c.getContext('2d'), w, h);
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = maxAniso;
-  t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  if (repeat) t.repeat.set(repeat[0], repeat[1]);
-  return t;
-}
-const rnd = (a, b) => a + Math.random() * (b - a);
-
-// parquet em chevron (ponto de Hungria): 1 tile = 2.4 m
-const floorTex = canvasTex(1024, 1024, (g, w, h) => {
-  const cols = 8, cw = w / cols, ph = 32;
-  for (let k = 0; k < cols; k++) {
-    const s = k % 2 ? 1 : -1, x0 = k * cw;
-    for (let y = -2 * cw; y < h + 2 * cw; y += ph) {
-      const l = rnd(26, 36);
-      g.fillStyle = `hsl(${rnd(24, 32)} ${rnd(26, 36)}% ${l}%)`;
-      g.beginPath();
-      g.moveTo(x0, y); g.lineTo(x0 + cw, y + cw * s * 0.5);
-      g.lineTo(x0 + cw, y + cw * s * 0.5 + ph); g.lineTo(x0, y + ph); g.closePath();
-      g.fill(); g.strokeStyle = 'rgba(30,18,10,.55)'; g.lineWidth = 1.5; g.stroke();
-    }
-  }
-}, [W / 2.4, L / 2.4]);
-
-// paredes: reboco claro com rodapé de mármore. 1 tile = 4 m x 8.2 m
-const wallTex = canvasTex(512, 1024, (g, w, h) => {
-  g.fillStyle = '#d9cfc0'; g.fillRect(0, 0, w, h);
-  for (let i = 0; i < 2500; i++) { g.fillStyle = `rgba(${Math.random() < .5 ? '255,255,255' : '90,70,50'},.035)`; g.fillRect(rnd(0, w), rnd(0, h), rnd(2, 10), rnd(2, 10)); }
-  const dado = h * (1.0 / S);
-  g.fillStyle = '#8f8476'; g.fillRect(0, h - dado, w, dado);
-  for (let i = 0; i < 40; i++) { g.strokeStyle = 'rgba(240,235,225,.12)'; g.lineWidth = rnd(1, 3); g.beginPath(); g.moveTo(rnd(0, w), h - dado); g.bezierCurveTo(rnd(0, w), h - dado * .6, rnd(0, w), h - dado * .3, rnd(0, w), h); g.stroke(); }
-  g.fillStyle = '#5e554b'; g.fillRect(0, h - 14, w, 14);
-  g.fillStyle = '#efe8dc'; g.fillRect(0, h - dado - 8, w, 8);
-}, [L / 4, 1]);
-
-// abóbada: caixotões nas laterais, claraboia no topo. u = arco, v = 1 vão
-function vaultDraw(emissive) {
-  return (g, w, h) => {
-    g.fillStyle = emissive ? '#000' : '#e8e1d4'; g.fillRect(0, 0, w, h);
-    const sky0 = w * 0.36, sky1 = w * 0.64;
-    if (!emissive) {
-      const n = 6, rows = 4;
-      for (const [a, b] of [[0, sky0 - 16], [sky1 + 16, w]]) {
-        const cw = (b - a) / n, rh = h / rows;
-        for (let i = 0; i < n; i++) for (let j = 0; j < rows; j++) {
-          const x = a + i * cw + 8, y = j * rh + 10, ww = cw - 16, hh = rh - 20;
-          g.fillStyle = '#d3c9b8'; g.fillRect(x, y, ww, hh);
-          g.fillStyle = '#c2b6a2'; g.fillRect(x + 7, y + 7, ww - 14, hh - 14);
-          g.fillStyle = '#ddd4c5'; g.beginPath(); g.arc(x + ww / 2, y + hh / 2, Math.min(ww, hh) * .16, 0, 7); g.fill();
-        }
-      }
-      g.fillStyle = '#b9a98f'; g.fillRect(sky0 - 16, 0, 16, h); g.fillRect(sky1, 0, 16, h);
-    }
-    g.fillStyle = emissive ? '#fffaf0' : '#f4f2ec'; g.fillRect(sky0, 0, sky1 - sky0, h);
-    g.strokeStyle = emissive ? '#3a3834' : '#8e8a82'; g.lineWidth = 5;
-    for (let x = sky0; x <= sky1 + 1; x += (sky1 - sky0) / 4) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); }
-    for (let y = 0; y <= h; y += h / 8) { g.beginPath(); g.moveTo(sky0, y); g.lineTo(sky1, y); g.stroke(); }
-  };
-}
-const vaultMap = canvasTex(1024, 512, vaultDraw(false), [1, BAYS]);
-const vaultEm = canvasTex(1024, 512, vaultDraw(true), [1, BAYS]);
-
-const placeholderTex = canvasTex(512, 400, (g, w, h) => {
-  g.fillStyle = '#ece6da'; g.fillRect(0, 0, w, h);
-  for (let i = 0; i < 1800; i++) { g.fillStyle = 'rgba(120,100,80,.05)'; g.fillRect(rnd(0, w), rnd(0, h), 1, rnd(2, 6)); }
-  g.strokeStyle = 'rgba(110,95,80,.5)'; g.lineWidth = 3; g.setLineDash([12, 10]);
-  g.strokeRect(24, 24, w - 48, h - 48);
-  g.fillStyle = 'rgba(95,80,66,.75)'; g.font = '500 30px Inter, sans-serif'; g.textAlign = 'center';
-  g.fillText('+ desenho', w / 2, h / 2 + 10);
-});
-
-// ---------- materiais ----------
-const M = {
-  floor: new THREE.MeshStandardMaterial({ map: floorTex, roughness: .42, metalness: 0 }),
-  wall: new THREE.MeshStandardMaterial({ map: wallTex, roughness: .9 }),
-  vault: new THREE.MeshStandardMaterial({ map: vaultMap, emissiveMap: vaultEm, emissive: 0xffffff, emissiveIntensity: 1.6, roughness: .85, side: THREE.DoubleSide }),
-  stone: new THREE.MeshStandardMaterial({ color: 0xe9e2d5, roughness: .55 }),
-  marble: new THREE.MeshStandardMaterial({ color: 0xf1ece4, roughness: .28 }),
-  gold: new THREE.MeshStandardMaterial({ color: 0xb8913f, roughness: .32, metalness: .85 }),
-  velvet: new THREE.MeshStandardMaterial({ color: 0x7d1424, roughness: .95 }),
-  wood: new THREE.MeshStandardMaterial({ color: 0x3a2618, roughness: .6 }),
-  glow: new THREE.MeshBasicMaterial({ color: 0xfff3dc, fog: false })
-};
-const box = (w, h, d, m, x, y, z) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); scene.add(o); return o; };
-
-// ---------- estrutura ----------
-const floor = new THREE.Mesh(new THREE.PlaneGeometry(W, L), M.floor);
-floor.rotation.x = -Math.PI / 2; floor.position.set(0, 0, -L / 2); scene.add(floor);
-
-for (const s of [-1, 1]) {
-  const wall = new THREE.Mesh(new THREE.PlaneGeometry(L, S), M.wall);
-  wall.rotation.y = s * -Math.PI / 2; wall.position.set(s * HW, S / 2, -L / 2); scene.add(wall);
-  box(.36, .6, L, M.stone, s * (HW - .18), S - .3, -L / 2);      // entablamento contínuo
-  box(.5, .16, L, M.stone, s * (HW - .25), S - .03, -L / 2);    // cornija
-}
-
-const vaultGeo = new THREE.CylinderGeometry(HW, HW, L, 64, 1, true, Math.PI / 2, Math.PI);
-vaultGeo.rotateX(Math.PI / 2);
-const vault = new THREE.Mesh(vaultGeo, M.vault);
-vault.position.set(0, S, -L / 2); scene.add(vault);
-
-// arcos transversais sobre pares de colunas
-const archShape = new THREE.Shape();
-archShape.absarc(0, 0, HW - .02, 0, Math.PI, false);
-archShape.absarc(0, 0, HW - .62, Math.PI, 0, true);
-const archGeo = new THREE.ExtrudeGeometry(archShape, { depth: 2.2, bevelEnabled: false, curveSegments: 48 });
-archGeo.translate(0, 0, -1.1);
-
-const shaftGeo = new THREE.CylinderGeometry(.27, .31, 6.5, 24);
-const capGeo = new THREE.CylinderGeometry(.44, .3, .5, 24);
-for (let k = 1; k < BAYS; k++) {
-  const z = -k * BAY;
-  const arch = new THREE.Mesh(archGeo, M.stone); arch.position.set(0, S, z); scene.add(arch);
-  for (const s of [-1, 1]) {
-    box(.9, .62, 2.6, M.stone, s * (HW - .45), S - .31, z);   // entablamento avançado
-    for (const dz of [-.72, .72]) {
-      const x = s * (HW - .42), zz = z + dz;
-      box(.8, .4, .8, M.marble, x, .2, zz);
-      const sh = new THREE.Mesh(shaftGeo, M.marble); sh.position.set(x, 3.65, zz); scene.add(sh);
-      const cp = new THREE.Mesh(capGeo, M.marble); cp.position.set(x, 7.15, zz); scene.add(cp);
-      box(.86, .2, .86, M.marble, x, 7.5, zz);
-    }
-  }
-}
-
-// paredes das extremidades com porta em arco e luz da sala seguinte
-function endWall(z, facing) {
-  const sh = new THREE.Shape();
-  sh.moveTo(-HW, -.05); sh.lineTo(HW, -.05); sh.lineTo(HW, S);
-  sh.absarc(0, S, HW, 0, Math.PI, false); sh.lineTo(-HW, -.05);
-  const hole = new THREE.Path();
-  hole.moveTo(-2, 0); hole.lineTo(2, 0); hole.lineTo(2, 5);
-  hole.absarc(0, 5, 2, 0, Math.PI, false); hole.lineTo(-2, 0);
-  sh.holes.push(hole);
-  const m = new THREE.Mesh(new THREE.ShapeGeometry(sh, 48), M.wall.clone());
-  m.material.map = null; m.material.color.set(0xd6ccbc);
-  m.position.z = z; m.rotation.y = facing > 0 ? 0 : Math.PI; scene.add(m);
-  const glow = new THREE.Mesh(new THREE.PlaneGeometry(8, 9), M.glow);
-  glow.position.set(0, 4, z - facing * 2.5); glow.rotation.y = m.rotation.y; scene.add(glow);
-  for (const s of [-1, 1]) box(.5, 5, .7, M.stone, s * 2.25, 2.5, z + facing * .2);
-  box(5, .4, .7, M.stone, 0, 7.3, z + facing * .2);
-}
-endWall(0, -1);
-endWall(-L, 1);
-
-// bancos de veludo
-const benchZ = [];
-for (let k = 1; k < BAYS; k += 2) {
-  const z = -k * BAY - BAY / 2; benchZ.push(z);
-  box(3, .1, .9, M.wood, 0, .08, z);
-  box(2.8, .34, .8, M.velvet, 0, .3, z);
-}
-
-// ---------- quadros ----------
-const slots = [];
-function buildFrame(slot, w, h) {
-  slot.group.clear();
-  const t = .13, d = .09;
-  const pic = new THREE.Mesh(new THREE.PlaneGeometry(w, h), slot.mat);
-  pic.position.z = .03; pic.userData.slot = slot; slot.pic = pic; slot.group.add(pic);
-  const bars = [[w + 2 * t, t, 0, h / 2 + t / 2], [w + 2 * t, t, 0, -h / 2 - t / 2], [t, h, w / 2 + t / 2, 0], [t, h, -w / 2 - t / 2, 0]];
-  for (const [bw, bh, x, y] of bars) { const b = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, d), M.gold); b.position.set(x, y, d / 2); slot.group.add(b); }
-}
-for (let k = 0; k < BAYS; k++) for (const dz of [-2.3, 2.3]) for (const s of [-1, 1]) {
-  const group = new THREE.Group();
-  group.position.set(s * (HW - .02), 3.3, -k * BAY - BAY / 2 + dz);
-  group.rotation.y = s * -Math.PI / 2;
-  scene.add(group);
-  const slot = { group, mat: new THREE.MeshStandardMaterial({ map: placeholderTex, roughness: .8 }), filled: false };
-  buildFrame(slot, 2.2, 1.7); slots.push(slot);
-}
-const picMeshes = () => slots.map(s => s.pic);
-
-function loadInto(slot, file) {
-  return new Promise(res => {
-    const url = URL.createObjectURL(file), img = new Image();
-    img.onload = () => {
-      const tex = new THREE.Texture(img); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = maxAniso; tex.needsUpdate = true;
-      const a = img.width / img.height, mw = 2.6, mh = 2.0;
-      let w = mw, h = mw / a; if (h > mh) { h = mh; w = mh * a; }
-      slot.mat = new THREE.MeshStandardMaterial({ map: tex, roughness: .85 }); slot.filled = true;
-      buildFrame(slot, w, h); res(true);
-    };
-    img.onerror = () => res(false);
-    img.src = url;
-  });
-}
-
-// ---------- controles ----------
-let yaw = 0, pitch = 0, locked = false, started = false;
-const keys = {}, move = { x: 0, y: 0 };
-addEventListener('keydown', e => { keys[e.code] = true; });
-addEventListener('keyup', e => { keys[e.code] = false; });
-document.addEventListener('pointerlockchange', () => { locked = document.pointerLockElement === canvas; $('cross').style.display = locked ? 'block' : 'none'; });
-
-const joy = $('joy'), knob = $('knob'), R = 50;
-let joyId = null, joyO = null;
-const looks = new Map();
-canvas.addEventListener('pointerdown', e => {
-  canvas.focus();
-  const p = { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, t: performance.now(), type: e.pointerType };
-  if (e.pointerType === 'touch' && joyId === null && e.clientX < innerWidth * .42 && e.clientY > innerHeight * .35) {
-    joyId = e.pointerId; joyO = p; joy.style.left = p.x + 'px'; joy.style.top = p.y + 'px'; joy.style.display = 'block';
-  } else looks.set(e.pointerId, p);
-  canvas.setPointerCapture(e.pointerId);
-});
-canvas.addEventListener('pointermove', e => {
-  if (locked && e.pointerType === 'mouse') { turn(e.movementX, e.movementY, .0022); return; }
-  if (e.pointerId === joyId) {
-    let dx = e.clientX - joyO.x, dy = e.clientY - joyO.y; const m = Math.hypot(dx, dy);
-    if (m > R) { dx *= R / m; dy *= R / m; }
-    knob.style.transform = `translate(${dx}px,${dy}px)`; move.x = dx / R; move.y = dy / R; return;
-  }
-  const p = looks.get(e.pointerId); if (!p) return;
-  turn(e.clientX - p.x, e.clientY - p.y, p.type === 'touch' ? .005 : .004);
-  p.x = e.clientX; p.y = e.clientY;
-});
-function endPointer(e) {
-  if (e.pointerId === joyId) { joyId = null; move.x = move.y = 0; joy.style.display = 'none'; knob.style.transform = ''; return; }
-  const p = looks.get(e.pointerId); looks.delete(e.pointerId);
-  if (locked && e.pointerType === 'mouse' && e.type === 'pointerup') { tap(innerWidth / 2, innerHeight / 2, true); return; }
-  if (p && e.type === 'pointerup' && Math.hypot(e.clientX - p.sx, e.clientY - p.sy) < 8 && performance.now() - p.t < 450) tap(e.clientX, e.clientY, false, p.type);
-}
-canvas.addEventListener('pointerup', endPointer);
-canvas.addEventListener('pointercancel', endPointer);
-function turn(dx, dy, k) { yaw -= dx * k; pitch = Math.max(-1.2, Math.min(1.2, pitch - dy * k)); }
-
-const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
-let target = null;
-function tap(x, y, fromLock, type) {
-  ndc.set(x / innerWidth * 2 - 1, -(y / innerHeight) * 2 + 1);
-  ray.setFromCamera(ndc, camera); ray.far = 14;
-  const hit = ray.intersectObjects(picMeshes(), false)[0];
-  if (hit) {
-    target = hit.object.userData.slot;
-    if (document.pointerLockElement) document.exitPointerLock();
-    $('fileOne').value = ''; $('fileOne').click(); return;
-  }
-  if (!fromLock && type === 'mouse' && canvas.requestPointerLock) {
-    try { const r = canvas.requestPointerLock(); if (r && r.catch) r.catch(() => {}); } catch (_) {}
-  }
-}
-$('fileOne').addEventListener('change', async e => {
-  const f = e.target.files[0]; if (f && target) { await loadInto(target, f); toast('Desenho colocado'); }
-});
-$('addBtn').addEventListener('click', () => { $('fileMany').value = ''; $('fileMany').click(); });
-$('fileMany').addEventListener('change', async e => {
-  const files = [...e.target.files]; if (!files.length) return;
-  const free = slots.filter(s => !s.filled).sort((a, b) =>
-    a.group.position.distanceToSquared(camera.position) - b.group.position.distanceToSquared(camera.position));
-  const list = free.length ? free : slots.slice();
-  let n = 0;
-  for (let i = 0; i < files.length && i < list.length; i++) if (await loadInto(list[i], files[i])) n++;
-  toast(n === 1 ? '1 desenho pendurado perto de você' : `${n} desenhos pendurados perto de você`);
-});
-
-// planta (barra de progresso clicável)
-const plan = $('plan');
-plan.innerHTML = Array.from({ length: BAYS - 1 }, (_, i) => `<i style="left:${(i + 1) / BAYS * 100}%"></i>`).join('') + '<b id="dot"></b>';
-plan.addEventListener('click', e => {
-  const r = plan.getBoundingClientRect(), f = (e.clientX - r.left) / r.width;
-  camera.position.z = clampZ(-f * L); camera.position.x = 0;
-});
-const clampZ = z => Math.max(-L + 1.2, Math.min(-1.2, z));
-
-$('goBtn').addEventListener('click', () => { $('intro').style.display = 'none'; started = true; canvas.focus(); });
-$('helpBtn').addEventListener('click', () => { $('intro').style.display = 'grid'; });
-$('minBtn').addEventListener('click', () => $('card').classList.add('min'));
-$('maxBtn').addEventListener('click', () => $('card').classList.remove('min'));
-
-let toastT;
-function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 2200); }
-
-addEventListener('resize', () => {
-  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight, false);
-});
-
-// ---------- loop ----------
-const clock = new THREE.Clock(), dot = $('dot'), where = $('where');
-let lastBay = -1;
-function frame() {
-  const dt = Math.min(clock.getDelta(), .05);
-  let fx = 0, fz = 0;
-  if (keys.KeyW || keys.ArrowUp) fz -= 1;
-  if (keys.KeyS || keys.ArrowDown) fz += 1;
-  if (keys.KeyA || keys.ArrowLeft) fx -= 1;
-  if (keys.KeyD || keys.ArrowRight) fx += 1;
-  fx += move.x; fz += move.y;
-  const m = Math.hypot(fx, fz);
-  if (m > 0.05) {
-    const sp = (keys.ShiftLeft || keys.ShiftRight ? 7 : 3.2) * Math.min(1, m) / Math.max(1, m);
-    const sin = Math.sin(yaw), cos = Math.cos(yaw);
-    camera.position.x += (fx * cos + fz * sin) * sp * dt;
-    camera.position.z += (-fx * sin + fz * cos) * sp * dt;
-  }
-  camera.position.x = Math.max(-HW + .9, Math.min(HW - .9, camera.position.x));
-  camera.position.z = clampZ(camera.position.z);
-  for (const bz of benchZ) {
-    const dx = camera.position.x, dz = camera.position.z - bz;
-    if (Math.abs(dx) < 1.9 && Math.abs(dz) < .9) {
-      if (1.9 - Math.abs(dx) < .9 - Math.abs(dz)) camera.position.x = Math.sign(dx || 1) * 1.9;
-      else camera.position.z = bz + Math.sign(dz || 1) * .9;
-    }
-  }
-  camera.rotation.set(pitch, yaw, 0);
-  const f = -camera.position.z / L;
-  dot.style.left = (f * 100) + '%';
-  const bay = Math.min(BAYS, Math.floor(f * BAYS) + 1);
-  if (bay !== lastBay) { where.textContent = `Vão ${bay} de ${BAYS}, ${Math.round(-camera.position.z)} m de ${L} m`; lastBay = bay; }
-  else if (m > 0.05) where.textContent = `Vão ${bay} de ${BAYS}, ${Math.round(-camera.position.z)} m de ${L} m`;
-  renderer.render(scene, camera);
-  requestAnimationFrame(frame);
-}
-window.__ok = true;
-$('load').remove();
-frame();
-</script>
+<script type="module" src="js/main.js"></script>
 </body>
 </html>
